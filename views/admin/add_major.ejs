@@ -1,0 +1,21 @@
+<h2>เพิ่มสาขาใหม่</h2>
+
+<% if (typeof error !== 'undefined' && error) { %>
+    <p style="color: red;"><strong>ข้อผิดพลาด:</strong> <%= error %></p>
+<% } %>
+
+<form action="/admin/majors/add" method="POST">
+    
+    <div>
+        <label for="majorName">ชื่อสาขา (เช่น เทคโนโลยีสารสนเทศ):</label>
+        <input type="text" id="majorName" name="majorName" required>
+    </div>
+
+    <div>
+        <label for="majorCode">รหัสสาขา (เช่น IT, CS, AI):</label>
+        <input type="text" id="majorCode" name="majorCode" required maxlength="5">
+    </div>
+
+    <button type="submit">เพิ่มสาขา</button>
+    <a href="/admin/dashboard">ยกเลิก</a>
+</form>

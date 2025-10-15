@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ลงทะเบียนผู้ใช้ใหม่ | วิทยาลัยการคอมพิวเตอร์</title>
+
+    <!-- 🔗 Bootstrap CSS (CDN Version) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <!-- Custom Style: ใช้พื้นหลังโทนเดียวกับหน้าแรกและจัดกึ่งกลาง Card -->
+    <style>
+        body {
+            /* Background from index.ejs */
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .register-card {
+            max-width: 800px;
+            /* Card กว้างขึ้นสำหรับฟอร์มที่มีหลายฟิลด์ */
+            width: 100%;
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            /* เงาเข้มเพื่อความโดดเด่น */
+        }
+
+        .btn-register {
+            background-color: #4caf50;
+            /* Green - Action color */
+            border-color: #4caf50;
+        }
+
+        .btn-register:hover {
+            background-color: #388e3c;
+            border-color: #388e3c;
+        }
+
+        .alert-error {
+            background-color: #e53935;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="register-card">
+        <h2 class="text-center mb-4 text-dark">ลงทะเบียนผู้ใช้ใหม่</h2>
+
+        <!-- ส่วนแสดงผล Error -->
+        <% if (typeof error !=='undefined' && error) { %>
+            <div class="alert alert-error alert-dismissible fade show mb-4" role="alert">
+                <strong>ข้อผิดพลาด:</strong>
+                <%= error %>
+            </div>
+            <% } %>
+
+                <form action="/register" method="POST" onsubmit="return validatePassword()">
+                    <!-- ใช้ Bootstrap Grid System เพื่อแบ่งฟอร์มเป็น 2 คอลัมน์บน Desktop -->
+                    <div class="row">
+                        <!-- คอลัมน์ซ้าย (ข้อมูลส่วนตัว) -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="userId" class="form-label">รหัสนักศึกษา:</label>
+                                <input type="text" id="userId" name="userId" class="form-control" required
+                                    maxlength="11">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="firstName" class="form-label">ชื่อจริง:</label>
+                                <input type="text" id="firstName" name="firstName" class="form-control" required
+                                    maxlength="100">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="lastName" class="form-label">นามสกุล:</label>
+                                <input type="text" id="lastName" name="lastName" class="form-control" required
+                                    maxlength="100">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">รหัสผ่าน:</label>
+                                <input type="password" id="password" name="password" class="form-control" required
+                                    maxlength="100">
+                            </div>
+
+                        </div>
+
+                        <!-- คอลัมน์ขวา (ข้อมูลติดต่อและความปลอดภัย) -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">อีเมล:</label>
+                                <input type="email" id="email" name="email" class="form-control" required
+                                    maxlength="255">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">เบอร์โทรศัพท์ (10 หลัก):</label>
+                                <input type="text" id="phone" name="phone" class="form-control" required maxlength="10">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="major" class="form-label">สาขา:</label>
+                                <select id="major" name="major" class="form-select" required>
+                                    <option value="">-- เลือกสาขา --</option>
+                                    <!-- โค้ด EJS สำหรับวนลูป Majors -->
+                                    <% if (typeof majors !=='undefined' && majors.length) { %>
+                                        <% majors.forEach(function(major) { %>
+                                            <option value="<%= major._id %>">
+                                                <%= major.majorCode %> - <%= major.majorName %>
+                                            </option>
+                                            <% }); %>
+                                                <% } %>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">ยืนยันรหัสผ่าน:</label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control"
+                                    required maxlength="100">
+                                <!-- ข้อความ Error สำหรับ Client-Side Validation -->
+                                <div id="passwordMatchError" class="form-text text-danger" style="display: none;">
+                                    รหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง!
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="role" value="user">
+                        </div>
+                    </div>
+                    <!-- ปุ่ม Submit อยู่ด้านนอก Grid เพื่อให้เต็มความกว้างด้านล่าง -->
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-register text-white fw-bold">สมัครสมาชิก</button>
+                        <a href="/login" class="btn btn-outline-secondary">มีบัญชีอยู่แล้ว? เข้าสู่ระบบ</a>
+                    </div>
+                </form>
+    </div>
+
+    <!-- 🔗 Bootstrap JS (CDN Version) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+
+    <script>
+        function validatePassword() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const errorElement = document.getElementById('passwordMatchError');
+
+            if (password !== confirmPassword) {
+                errorElement.style.display = 'block';
+                return false; // ป้องกันการ Submit
+            } else {
+                errorElement.style.display = 'none';
+                return true; // อนุญาตให้ Submit
+            }
+        }
+    </script>
+</body>
+
+</html>

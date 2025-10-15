@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ | วิทยาลัยการคอมพิวเตอร์</title>
+
+    <!-- 🔗 Bootstrap CSS (CDN Version) - แก้ไข 'xintegrity' เป็น 'integrity' -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <!-- 🔗 SweetAlert2 CSS CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <!-- Custom Style: ใช้พื้นหลังโทนเดียวกับหน้าแรกและจัดกึ่งกลาง Card -->
+    <style>
+        body {
+            /* Background from index.ejs */
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .login-card {
+            max-width: 450px;
+            /* จำกัดความกว้างของ Card */
+            width: 100%;
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            /* เงาเข้มเพื่อความโดดเด่น */
+        }
+
+        .btn-login {
+            background-color: #00bcd4;
+            /* Cyan/Teal - Technology color */
+            border-color: #00bcd4;
+        }
+
+        .btn-login:hover {
+            background-color: #0097a7;
+            border-color: #0097a7;
+        }
+
+        .alert-error {
+            background-color: #e53935;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-card">
+        <h2 class="text-center mb-4 text-dark">เข้าสู่ระบบ</h2>
+
+        <!-- ส่วนแสดงผล Error: ลบ Alert เก่าออก ให้ SweetAlert จัดการแทน -->
+        <!-- <% if (typeof error !=='undefined' && error) { %>
+            <div class="alert alert-error alert-dismissible fade show mb-4" role="alert">
+                <strong>แจ้งเตือน:</strong>
+                <%= error %>
+            </div>
+            <% } %> -->
+
+        <form action="/login" method="POST">
+
+            <div class="mb-3">
+                <label for="username" class="form-label">รหัสนักศึกษา หรือ อีเมล:</label>
+                <input type="text" id="username" name="username" class="form-control" required>
+            </div>
+
+            <div class="mb-4">
+                <label for="password" class="form-label">รหัสผ่าน:</label>
+                <input type="password" id="password" name="password" class="form-control" required>
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-login text-white fw-bold">เข้าสู่ระบบ</button>
+            </div>
+
+        </form>
+
+        <p class="text-center mt-3 mb-0">ยังไม่มีบัญชี? <a href="/register" class="text-decoration-none">สมัครสมาชิก</a>
+        </p>
+    </div>
+
+    <!-- 🔗 Bootstrap JS (CDN Version) - แก้ไข 'xintegrity' เป็น 'integrity' -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+
+    <!-- 🔗 SweetAlert2 JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // 1. ตรวจสอบสถานะความสำเร็จ (Success Status)
+            const loginSuccessString = "<%= typeof loginSuccess !== 'undefined' && loginSuccess ? 'true' : 'false' %>";
+            const loginSuccess = loginSuccessString === 'true';
+
+            // 2. รับ URL ปลายทาง (Target URL)
+            const targetUrl = "<%= typeof targetUrl !== 'undefined' ? targetUrl : '/users/dashboard' %>";
+
+            // 3. รับข้อความผิดพลาด (Error Message)
+            const errorMessage = "<%= typeof error !== 'undefined' ? error : '' %>";
+
+            if (loginSuccess) {
+                // กรณี: เข้าสู่ระบบสำเร็จ (Success)
+                Swal.fire({
+                    icon: 'success',
+                    title: 'เข้าสู่ระบบสำเร็จ!',
+                    text: 'ยินดีต้อนรับเข้าสู่ระบบจัดการบริการวิทยาลัยการคอมพิวเตอร์',
+                    showConfirmButton: false,
+                    timer: 2000 // ให้ Alert แสดง 2 วินาที
+                }).then(() => {
+                    // เมื่อ Alert หายไป ให้ทำการ Redirect
+                    window.location.href = targetUrl;
+                });
+            } else if (errorMessage) {
+                // กรณี: เข้าสู่ระบบล้มเหลว (Error) - ไม่ต้อง Redirect
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เข้าสู่ระบบล้มเหลว',
+                    text: errorMessage, // แสดงข้อความที่ Server ส่งมา (เช่น รหัสผ่านไม่ถูกต้อง)
+                    showConfirmButton: true,
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>
