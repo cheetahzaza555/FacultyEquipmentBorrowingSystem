@@ -87,26 +87,16 @@
                                 placeholder="เช่น โปรเจคเตอร์ EPSON EB-W51" maxlength="100" required>
                         </div>
 
-                        <!-- รหัสประเภทอุปกรณ์ (category_id) - Mock Dropdown -->
+                        <!-- ประเภทอุปกรณ์ (Category) - Dropdown ที่ใช้ EJS วนลูป -->
                         <div class="mb-4">
-                            <label for="category_id" class="form-label fw-semibold">ประเภทอุปกรณ์ (Category) <span
-                                    class="text-danger">*</span>:</label>
-                            <select id="category_id" name="category_id" class="form-select" required>
-                                <option value="" disabled selected>--
-                                    กรุณาเลือกประเภทอุปกรณ์ --</option>
-
-                                <!-- 💡 โค้ดจริงจะมีการวนลูป categories ที่ถูกส่งมาจาก Router -->
-                                <% if (typeof categories !=='undefined' && categories.length> 0) { %>
-                                    <% categories.forEach(category=> { %>
-                                        <option value="<%= category._id %>">
-                                            <%= category.code %> - <%= category.name %>
-                                        </option>
-                                        <% }) %>
-                                            <% } else { %>
-                                                <option value="mock_id_1">PRJ - Projector</option>
-                                                <option value="mock_id_2">NB - Notebook</option>
-                                                <option value="mock_id_3">CAM - Camera</option>
-                                                <% } %>
+                            <label for="category" class="form-label">หมวดหมู่อุปกรณ์ <span class="text-danger">*</span></label>
+                            <select class="form-select" id="category" name="category_id" required>
+                                <option value="" selected>เลือกหมวดหมู่อุปกรณ์</option>
+                                <% categories.forEach(function(category) { %>
+                                    <option value="<%= category._id %>">
+                                        <%= category.name %>
+                                    </option>
+                                    <% }); %>
                             </select>
                         </div>
 
@@ -120,8 +110,6 @@
                                 <option value="unavailable">ไม่พร้อมใช้งาน (Unavailable)
                                 </option>
                                 <option value="broken">ชำรุด (Broken)</option>
-                                <option value="maintenance">กำลังซ่อมบำรุง (Maintenance)
-                                </option>
                             </select>
                         </div>
                     </div>
