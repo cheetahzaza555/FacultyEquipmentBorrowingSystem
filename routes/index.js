@@ -42,40 +42,44 @@ router.get('/register', async (req, res) => {
 });
 
 router.post('/register', async (req, res) => {
-  // ... (รับฟิลด์ทั้งหมด)
+  const { userId, firstName, lastName, email, password, confirmPassword, phone, major, role = 'user' } = req.body;
+  let majors = []; // 🔑 กำหนด majors นอก try/catch เพื่อให้เข้าถึงได้เสมอ
+
+  // 1. พยายามดึง Majors ก่อน (ใช้ในการ render หน้า error กลับ)
   try {
-    const { userId, firstName, lastName, email, password, confirmPassword, phone, major, role = 'user' } = req.body;
+    // [ข้อควรระวัง]: ตรวจสอบให้แน่ใจว่า Major model ถูก import และใช้งานได้ถูกต้อง
+    majors = await Major.find({});
+  } catch (dbError) {
+    console.error("Major Fetch Error (Pre-register):", dbError);
+    // ถ้าดึงไม่ได้ ให้ majors เป็น Array ว่าง ซึ่งจะป้องกันไม่ให้ EJS error
+  }
 
-    // 🔑 ดึง majors ล่วงหน้า เพื่อใช้ในการ render กลับเมื่อเกิด error
-    const majors = await Major.find({});
-
-    // 1. ตรวจสอบรหัสผ่านไม่ตรงกัน (Server-Side Validation)
+  try {
+    // 2. ตรวจสอบรหัสผ่านไม่ตรงกัน (Server-Side Validation)
     if (password !== confirmPassword) {
-      // ❌ ต้องส่ง majors กลับไปด้วย
       return res.render('register', { error: '❌ รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน', majors: majors });
     }
 
-    // 2. ตรวจสอบว่ามี userId หรือ email ซ้ำกันหรือไม่
+    // 3. ตรวจสอบว่ามี userId หรือ email ซ้ำกันหรือไม่
     const existingUser = await User.findOne({ $or: [{ userId }, { email }] });
     if (existingUser) {
-      // ❌ ต้องส่ง majors กลับไปด้วย
-      return res.render('register', { error: '❌ รหัสผู้ใช้หรืออีเมลนี้มีอยู่ในระบบแล้ว', majors: majors });
+      const duplicateField = existingUser.userId === userId ? 'รหัสผู้ใช้' : 'อีเมล';
+      return res.render('register', { error: `❌ ${duplicateField} นี้มีอยู่ในระบบแล้ว`, majors: majors });
     }
 
-    // 3. สร้างและบันทึก User ใหม่
+    // 4. สร้างและบันทึก User ใหม่
     const newUser = new User({
       userId, firstName, lastName, email, password, phone, major, role
     });
 
     await newUser.save();
-    res.redirect('/login');
+
+    // 🎯 [แก้ไข] Redirect เมื่อสำเร็จ: ใช้ Query Parameter เพื่อให้ SweetAlert ทำงานในหน้า Login
+    res.redirect('/login?registered=true');
 
   } catch (error) {
     console.error("Register Error:", error);
 
-    // ❌ ในกรณีเกิดข้อผิดพลาดอื่น ๆ (เช่น Validation จาก Mongoose) ก็ต้องส่ง majors กลับไปด้วย
-    const majors = await Major.find({});
-    res.render('register', { error: 'เกิดข้อผิดพลาดในการลงทะเบียน: ' + error.message, majors: majors });
   }
 });
 
@@ -83,12 +87,9 @@ router.post('/register', async (req, res) => {
 // 🚀 POST /login - เข้าสู่ระบบ (ใช้ userId/email แทน username)
 // ========================================
 router.post('/login', async (req, res) => {
-  // 🔑 การ Login ควรใช้ userId หรือ email ที่เป็น unique แทน username 
-  // ในที่นี้เราจะอนุญาตให้ใช้ field 'username' เดิมที่ส่งมาจาก Form เพื่อหา userId หรือ email ในฐานข้อมูล
   const { username, password } = req.body;
 
   try {
-    // ค้นหาผู้ใช้ด้วย userId หรือ email (ถ้าผู้ใช้กรอกรหัสผู้ใช้หรืออีเมลมาใน field username)
     const user = await User.findOne({ $or: [{ userId: username }, { email: username }] });
 
     if (!user) {

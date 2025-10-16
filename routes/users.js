@@ -8,7 +8,9 @@ router.get('/dashboard', ensureAuthenticated, (req, res) => {
     // เรนเดอร์ไฟล์ user_dashboard.ejs ในโฟลเดอร์ views/user
     res.render('users/user_dashboard', {
         title: 'Users Dashboard',
-        user: req.session.user
+        user: req.session.user,
+        layout: 'layouts/navbar_user',
+        activePage: 'dashboard'
     });
 });
 

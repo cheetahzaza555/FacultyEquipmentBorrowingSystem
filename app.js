@@ -5,6 +5,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const mongoose = require('mongoose');
 const session = require('express-session');
+const expressLayouts = require('express-ejs-layouts');
 
 
 var indexRouter = require('./routes/index');
@@ -27,6 +28,8 @@ connectDB();
 
 // View Engine Setup
 app.set('views', path.join(__dirname, 'views'));
+app.use(expressLayouts);
+app.set('layout', 'layouts/index'); // กำหนด layout หลักที่ใช้ร่วมกัน
 app.set('view engine', 'ejs');
 
 // Middleware ใช้งานทั่วไป
@@ -38,7 +41,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 // ========================================
-// 🔑 Session Middleware (แก้จุดที่ทำให้เกิด TypeError)
+// 🔑 Session Middleware
 // ========================================
 app.use(session({
   // *** สำคัญ: เปลี่ยน YOUR_SECRET_KEY เป็นคีย์ลับที่ซับซ้อน ***
@@ -49,12 +52,14 @@ app.use(session({
 }));
 
 
-// =s=======================================
-// 🧭 Route Handlers (ต้องอยู่หลัง Session Middleware)
+
+// ========================================
+// 🧭 Route Handlers (ต้องอยู่หลัง Session และ Flash Middleware)
 // ========================================
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/admin', adminRouter);
+
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

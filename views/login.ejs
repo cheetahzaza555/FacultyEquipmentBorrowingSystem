@@ -109,6 +109,24 @@
             // 3. รับข้อความผิดพลาด (Error Message)
             const errorMessage = "<%= typeof error !== 'undefined' ? error : '' %>";
 
+            const urlParams = new URLSearchParams(window.location.search);
+
+            if (urlParams.get('registered') === 'true') {
+                // แสดง SweetAlert แจ้งเตือนความสำเร็จ
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ลงทะเบียนสำเร็จ!',
+                    text: 'คุณสามารถเข้าสู่ระบบด้วยบัญชีที่ลงทะเบียนใหม่ได้ทันที',
+                    confirmButtonText: 'ตกลง',
+                    allowOutsideClick: false
+                }).then(() => {
+                    // ล้าง query parameter ออกจาก URL เพื่อป้องกันการแสดงซ้ำเมื่อรีเฟรช
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                });
+                // ถ้าแสดงสำเร็จแล้ว ไม่ต้องประมวลผล Logic อื่นๆ ต่อ
+                return;
+            }
+
             if (loginSuccess) {
                 // กรณี: เข้าสู่ระบบสำเร็จ (Success)
                 Swal.fire({

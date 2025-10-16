@@ -1,0 +1,168 @@
+<!-- 💡 โค้ดนี้สมมติว่ามีการใช้ Layout Template ที่โหลด Bootstrap CSS/JS และ Font Awesome แล้ว -->
+<!-- หากไม่มีการใช้ Layout, ต้องเพิ่ม CDN links เข้าไปในไฟล์นี้ด้วย -->
+
+<!-- ตั้งค่า Custom CSS (หากไม่มี Layout) -->
+<style>
+    :root {
+        --primary-color: #f7a329;
+        /* Admin Orange */
+        --dark-bg: #1e1e2f;
+        --card-bg: #27293d;
+        --text-color: #f8f9fa;
+    }
+
+    /* สไตล์สำหรับปุ่มหลัก */
+    .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        font-weight: 600;
+        transition: background-color 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-primary:hover {
+        background-color: #e09322;
+        border-color: #e09322;
+        box-shadow: 0 4px 10px rgba(247, 163, 41, 0.4);
+    }
+
+    /* สไตล์สำหรับ Form Card */
+    .equipment-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--primary-color);
+    }
+
+    /* สไตล์สำหรับ Label */
+    .form-label {
+        color: var(--text-color);
+    }
+
+    /* สไตล์สำหรับ Input/Select */
+    .form-control,
+    .form-select {
+        background-color: #3b3e55;
+        color: var(--text-color);
+        border: 1px solid #5d6185;
+    }
+
+    /* Custom style for file input button text (often necessary in dark themes) */
+    .form-control[type="file"] {
+        padding-top: 0.5rem;
+        /* ปรับให้ปุ่มเลือกไฟล์ดูดีขึ้น */
+    }
+
+    .form-control::placeholder,
+    .form-select {
+        color: #b0b4c0;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        background-color: #3b3e55;
+        color: var(--text-color);
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(247, 163, 41, 0.25);
+    }
+</style>
+
+<div class="container py-5">
+    <!-- Header -->
+    <h1 class="mb-4" style="color: var(--primary-color);">
+        <i class="fas fa-box-open me-2"></i> เพิ่มอุปกรณ์ใหม่
+    </h1>
+
+    <!-- Form Card -->
+    <div class="card shadow-lg rounded-4 equipment-card">
+        <div class="card-body p-4 p-md-5">
+            <!-- 🛠️ แก้ไขที่ 1: เพิ่ม enctype="multipart/form-data" เพื่อให้สามารถส่งไฟล์ได้ -->
+            <form action="/admin/equipment/add" method="POST" enctype="multipart/form-data">
+
+                <div class="row">
+                    <!-- Column 1 -->
+                    <div class="col-md-6">
+                        <!-- ชื่ออุปกรณ์ (name) -->
+                        <div class="mb-4">
+                            <label for="name" class="form-label fw-semibold">ชื่ออุปกรณ์
+                                (Name) <span class="text-danger">*</span>:</label>
+                            <input type="text" id="name" name="name" class="form-control"
+                                placeholder="เช่น โปรเจคเตอร์ EPSON EB-W51" maxlength="100" required>
+                        </div>
+
+                        <!-- รหัสประเภทอุปกรณ์ (category_id) - Mock Dropdown -->
+                        <div class="mb-4">
+                            <label for="category_id" class="form-label fw-semibold">ประเภทอุปกรณ์ (Category) <span
+                                    class="text-danger">*</span>:</label>
+                            <select id="category_id" name="category_id" class="form-select" required>
+                                <option value="" disabled selected>--
+                                    กรุณาเลือกประเภทอุปกรณ์ --</option>
+
+                                <!-- 💡 โค้ดจริงจะมีการวนลูป categories ที่ถูกส่งมาจาก Router -->
+                                <% if (typeof categories !=='undefined' && categories.length> 0) { %>
+                                    <% categories.forEach(category=> { %>
+                                        <option value="<%= category._id %>">
+                                            <%= category.code %> - <%= category.name %>
+                                        </option>
+                                        <% }) %>
+                                            <% } else { %>
+                                                <option value="mock_id_1">PRJ - Projector</option>
+                                                <option value="mock_id_2">NB - Notebook</option>
+                                                <option value="mock_id_3">CAM - Camera</option>
+                                                <% } %>
+                            </select>
+                        </div>
+
+                        <!-- สถานะอุปกรณ์ (status) - ใช้ Enum Dropdown -->
+                        <div class="mb-4">
+                            <label for="status" class="form-label fw-semibold">สถานะอุปกรณ์
+                                (Status) <span class="text-danger">*</span>:</label>
+                            <select id="status" name="status" class="form-select" required>
+                                <option value="available" selected>พร้อมใช้งาน
+                                    (Available)</option>
+                                <option value="unavailable">ไม่พร้อมใช้งาน (Unavailable)
+                                </option>
+                                <option value="broken">ชำรุด (Broken)</option>
+                                <option value="maintenance">กำลังซ่อมบำรุง (Maintenance)
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Column 2 -->
+                    <div class="col-md-6">
+                        <!-- คำอธิบายอุปกรณ์ (description) -->
+                        <div class="mb-4">
+                            <label for="description" class="form-label fw-semibold">คำอธิบายอุปกรณ์
+                                (Description):</label>
+                            <textarea id="description" name="description" class="form-control" rows="5" maxlength="255"
+                                placeholder="ระบุคุณสมบัติ, รุ่น, หรือข้อมูลจำเพาะสำคัญ (สูงสุด 255 ตัวอักษร)"></textarea>
+                        </div>
+
+                        <!-- 🛠️ แก้ไขที่ 2: เปลี่ยนจาก Input Type Text เป็น Input Type File -->
+                        <div class="mb-4">
+                            <label for="image" class="form-label fw-semibold">รูปภาพอุปกรณ์
+                                (Image File) <span class="text-danger">*</span>:</label>
+                            <input type="file" id="image" name="image" class="form-control" accept="image/*" required>
+                            <small class="form-text text-light opacity-75">กรุณาเลือกไฟล์รูปภาพ (.jpg, .png)</small>
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <hr style="border-top: 1px solid #4c4f69;">
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="/admin/equipment" class="btn btn-secondary px-4">
+                        <i class="fas fa-arrow-left me-1"></i> กลับไปหน้ารายการ
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fas fa-save me-1"></i> บันทึกอุปกรณ์
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+</div>
