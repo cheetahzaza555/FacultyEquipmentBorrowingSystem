@@ -133,9 +133,11 @@
                     <i class="fas fa-user-shield me-1"></i> Admin: <%= typeof user !=='undefined' ? user.username
                         : 'Username' %>
                 </span>
-                <a href="/logout" class="btn btn-sm logout-btn text-white">
-                    <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+                <!-- 💡 แก้ไข: ลบ btn-sm ออกเพื่อให้ใช้ขนาดตาม Custom CSS -->
+                <a href="/logout" class="btn logout-btn text-white btn-danger">
+                    <i class="fas fa-sign-out-alt me-1"></i> ออกจากระบบ
                 </a>
+
             </div>
         </div>
     </nav>

@@ -9,6 +9,8 @@ const { ensureAdmin } = require('../middleware/auth'); // ใช้ Middleware �
 const upload = require('../middleware/upload');
 const Equipment = require('../model/equipment');
 const Category = require('../model/category');
+const User = require('../model/users');
+const Major = require('../model/major');
 
 
 // Route สำหรับหน้า Admin Dashboard
@@ -62,8 +64,8 @@ router.get('/equipment/add', ensureAdmin, async (req, res) => {
             categories: categories,
             user: req.session.user,
             layout: 'layouts/navbar_admin',
-            formData: {}, // ข้อมูลฟอร์มเปล่า
-            error: null // ไม่มีข้อความผิดพลาดเริ่มต้น
+            formData: {},
+            error: null
         });
 
     } catch (err) {
@@ -164,5 +166,165 @@ router.post(
     }
 );
 
+// ===================================================================
+// GET /admin/users - แสดงหน้ารายชื่อผู้ใช้งานทั้งหมด
+// ===================================================================
+router.get('/users', ensureAdmin, async (req, res) => {
+    try {
+        // ดึงข้อมูลผู้ใช้งานทั้งหมด และ populate สาขา (Major)
+        const users = await User.find()
+            .select('-password') // ไม่ดึงรหัสผ่านมา
+            .populate('major', 'majorName'); // ดึงเฉพาะ majorName จาก Major Model
+
+        // Render หน้า EJS
+        res.render('admin/list_users', {
+            pageTitle: 'จัดการผู้ใช้งาน',
+            users: users,
+            activePage: 'users',
+            layout: 'layouts/navbar_admin',
+            user: req.session.user,
+        });
+
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).send('Server Error: Cannot fetch user list.');
+    }
+});
+
+
+// ===================================================================
+// DELETE /admin/users/delete/:id - ลบผู้ใช้งาน
+// ===================================================================
+router.post('/users/delete/:id', ensureAdmin, async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        // ค้นหาและลบผู้ใช้งานตาม ID ฐานข้อมูล
+        const result = await User.findByIdAndDelete(userId);
+
+        if (!result) {
+            // หากไม่พบผู้ใช้งาน
+            console.warn(`Attempted to delete non-existent user ID: ${userId}`);
+            // 💡 ในระบบจริง: อาจเพิ่ม Flash Message แจ้งเตือนว่าลบไม่สำเร็จ
+            // req.flash('error', 'ไม่พบผู้ใช้งานที่ต้องการลบ');
+            return res.redirect('/admin/users');
+        }
+
+        // ลบสำเร็จ
+        // 💡 ในระบบจริง: อาจเพิ่ม Flash Message แจ้งเตือนว่าลบสำเร็จ
+        // req.flash('success', `ลบผู้ใช้งาน ${result.firstName} สำเร็จแล้ว`);
+        res.redirect('/admin/users');
+
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        // 💡 ในระบบจริง: แจ้งเตือนผู้ใช้หากเกิดข้อผิดพลาด
+        // req.flash('error', 'เกิดข้อผิดพลาดในการลบผู้ใช้งาน');
+        res.status(500).redirect('/admin/users');
+    }
+});
+
+// ===================================================================
+// GET /admin/users/edit/:id - แสดงหน้าฟอร์มแก้ไขผู้ใช้งาน
+// ===================================================================
+router.get('/users/edit/:id', ensureAdmin, async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        // ** DEBUG 1: ตรวจสอบ ID ที่รับมา **
+        console.log(`[DEBUG] Attempting to find user with ID: ${userId}`);
+
+        // 1. ดึงข้อมูลผู้ใช้งานที่ต้องการแก้ไข
+        const userToEdit = await User.findById(userId).select('-password').populate('major', 'majorName');
+        // 2. ดึงข้อมูลสาขา/คณะทั้งหมดสำหรับ Dropdown
+        const majors = await Major.find().sort({ majorName: 1 });
+
+        // ** DEBUG 2: ตรวจสอบผลลัพธ์จาก Mongoose **
+        if (userToEdit) {
+            console.log(`[DEBUG] User found: ${userToEdit.email}`);
+        } else {
+            console.log(`[DEBUG] User NOT found for ID: ${userId}. Redirecting.`);
+        }
+
+        if (!userToEdit) {
+            // 💡 ไม่พบผู้ใช้งาน -> Redirect
+            // แนะนำให้ใช้ Flash Message แจ้งเตือนว่า "ไม่พบผู้ใช้งาน"
+            return res.redirect('/admin/users');
+        }
+
+        // 3. กำหนดรายการสิทธิ์ที่อนุญาตให้เลือก
+        const roles = ['user', 'admin'];
+
+        // 4. Render หน้าฟอร์มแก้ไข
+        res.render('admin/edit_user', {
+            title: 'แก้ไขข้อมูลผู้ใช้งาน',
+            activePage: 'users',
+            layout: 'layouts/navbar_admin',
+            user: req.session.user,
+            userToEdit: userToEdit,
+            majors: majors,
+            roles: roles,
+            error: null
+        });
+
+    } catch (error) {
+        // ** DEBUG 3: ตรวจสอบข้อผิดพลาดของ Mongoose **
+        // ข้อผิดพลาดที่พบบ่อยคือ CastError: Cast to ObjectId failed for value "..."
+        console.error('Error loading user edit page or Mongoose error:', error);
+        // 💡 จัดการข้อผิดพลาดและ Redirect
+        res.status(500).redirect('/admin/users');
+    }
+});
+
+
+// ===================================================================
+// POST /admin/users/edit/:id - จัดการการบันทึกแก้ไขข้อมูลผู้ใช้งาน
+// ===================================================================
+router.post('/users/edit/:id', ensureAdmin, async (req, res) => {
+    try {
+        const userId = req.params.id;
+        // ดึงข้อมูลที่ส่งมาจากฟอร์ม (Role, Major, Status และฟิลด์อื่นๆ ที่อาจแก้ไข)
+        const { role, major, status } = req.body;
+
+        const roles = ['user', 'admin'];
+
+        // 1. ตรวจสอบความถูกต้องของสิทธิ์ (Role Validation)
+        if (!role || !roles.includes(role)) {
+            // 💡 ในระบบจริง: ควรใช้ Flash Message และ Render ฟอร์มพร้อม Error
+            console.error('Invalid role provided or missing:', role);
+            // ส่งผู้ใช้กลับไปหน้าแก้ไข
+            return res.redirect(`/admin/users/edit/${userId}`);
+        }
+
+        // 2. เตรียมข้อมูลที่ต้องการอัพเดท
+        const updateData = {
+            role: role,
+            // 💡 เพิ่มฟิลด์อื่นๆ ที่ต้องการแก้ไข เช่น major, status หากมีในฟอร์ม
+            major: major || null, // สมมติว่า major คือ ObjectId หรือ null
+            status: status || 'active' // สมมติว่า status มีให้เลือกในฟอร์ม
+        };
+
+        // 3. อัพเดทผู้ใช้งานในฐานข้อมูล
+        const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+            new: true, // คืนค่า Document ที่อัพเดทแล้ว
+            runValidators: true // รัน Validation ใน Schema
+        });
+
+        if (!updatedUser) {
+            // 💡 ผู้ใช้งานไม่พบ
+            // req.flash('error', 'ไม่พบผู้ใช้งานที่ต้องการแก้ไข');
+            return res.redirect('/admin/users');
+        }
+
+        // 4. อัพเดทสำเร็จ
+        // req.flash('success', `อัปเดตข้อมูลผู้ใช้งาน ${updatedUser.firstName} สำเร็จแล้ว`);
+        res.redirect('/admin/users?success=user_updated');
+
+    } catch (error) {
+        console.error('Error updating user:', error);
+        // 💡 จัดการข้อผิดพลาดจาก Mongoose (เช่น CastError)
+        // req.flash('error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูลผู้ใช้งาน');
+        res.status(500).redirect(`/admin/users/edit/${req.params.id}`);
+    }
+});
 
 module.exports = router;

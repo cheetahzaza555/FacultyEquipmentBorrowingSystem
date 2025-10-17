@@ -1,4 +1,4 @@
-// 1. Import necessary libraries
+
 const multer = require('multer');
 const path = require('path'); // 💡 โมดูลสำหรับจัดการเส้นทางไฟล์
 const fs = require('fs'); // 💡 โมดูลสำหรับจัดการไฟล์และโฟลเดอร์

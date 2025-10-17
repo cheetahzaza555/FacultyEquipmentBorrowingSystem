@@ -1,0 +1,190 @@
+<style>
+    :root {
+        --primary-color: #f7a329;
+        /* Admin Orange */
+        --dark-bg: #1e1e2f;
+        --card-bg: #27293d;
+        --text-color: #f8f9fa;
+    }
+
+    /* Background and Text */
+    body {
+        background-color: var(--dark-bg);
+        color: var(--text-color);
+    }
+
+    .table-dark {
+        --bs-table-bg: #3b3e55;
+        --bs-table-striped-bg: #4c4f69;
+        --bs-table-hover-bg: #5d6185;
+        --bs-table-border-color: #5d6185;
+        color: var(--text-color);
+    }
+
+    /* Card Styling */
+    .user-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--primary-color);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
+    }
+
+    /* Primary Button (Pill Style) */
+    .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        font-weight: 600;
+        transition: all 0.2s ease-in-out;
+        box-shadow: 0 4px 10px rgba(247, 163, 41, 0.3);
+    }
+
+    .btn-primary:hover {
+        background-color: #e09322;
+        border-color: #e09322;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(247, 163, 41, 0.5);
+    }
+
+    /* Custom Role Badge Colors */
+    .badge-admin {
+        background-color: #f7a329;
+        color: #1e1e2f;
+    }
+
+    .badge-user {
+        background-color: #4CAF50;
+        color: white;
+    }
+</style>
+
+<div class="container py-5">
+
+    <!-- Header and Action Button -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0" style="color: var(--primary-color);">
+            <i class="fas fa-user-friends me-2"></i> จัดการผู้ใช้งาน
+        </h1>
+    </div>
+
+    <!-- User List Card -->
+    <div class="card shadow-lg rounded-4 user-card">
+        <div class="card-body p-4 p-md-5">
+
+            <% if (users && users.length> 0) { %>
+
+                <!-- Responsive Table Wrapper -->
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped table-hover rounded-3 overflow-hidden text-start">
+                        <thead>
+                            <tr>
+                                <th scope="col">รหัสผู้ใช้</th>
+                                <th scope="col">ชื่อ-นามสกุล</th>
+                                <th scope="col">อีเมล</th>
+                                <th scope="col">เบอร์โทร</th>
+                                <th scope="col">สาขา</th>
+                                <th scope="col">สิทธิ์</th>
+                                <th scope="col">วันที่สร้าง</th>
+                                <th scope="col">ดำเนินการ</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <% users.forEach(user=> { %>
+                                <tr>
+                                    <td>
+                                        <%= user.userId %>
+                                    </td>
+                                    <td>
+                                        <%= user.firstName %>
+                                            <%= user.lastName %>
+                                    </td>
+                                    <td>
+                                        <%= user.email %>
+                                    </td>
+                                    <td>
+                                        <%= user.phone %>
+                                    </td>
+                                    <td>
+                                        <%= user.major ? user.major.majorName : 'ไม่ระบุ' %>
+                                    </td>
+                                    <td>
+                                        <% var roleClass=user.role==='admin' ? 'badge-admin' : 'badge-user' ; %>
+                                            <span class="badge <%= roleClass %>">
+                                                <%= user.role.toUpperCase() %>
+                                            </span>
+                                    </td>
+                                    <td>
+                                        <%= user.createdAt.toLocaleDateString('th-TH') %>
+                                    </td>
+
+                                    <td class="text-nowrap">
+                                        <a href="/admin/users/edit/<%= user._id %>"
+                                            class="btn btn-sm btn-outline-light me-2" title="แก้ไข">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+
+                                        <!-- ปุ่มลบ (เรียก Modal) -->
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                            onclick="confirmDelete('<%= user._id %>', '<%= user.firstName %> <%= user.lastName %>')"
+                                            title="ลบ">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <% } else { %>
+                    <div class="alert alert-warning text-center" role="alert">
+                        <i class="fas fa-info-circle me-1"></i> ไม่พบข้อมูลผู้ใช้งานในระบบ
+                    </div>
+                    <% } %>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal ยืนยันการลบ -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background-color: var(--card-bg); color: var(--text-color);">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title" id="deleteConfirmModalLabel" style="color: var(--primary-color);">
+                    ยืนยันการลบ
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                คุณแน่ใจหรือไม่ที่จะลบผู้ใช้งาน:
+                <strong id="userNameToDelete"></strong>? <br>
+                การดำเนินการนี้ไม่สามารถย้อนกลับได้
+            </div>
+
+            <div class="modal-footer border-top-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+
+                <!-- ฟอร์มยืนยันการลบ -->
+                <form id="deleteUserForm" method="POST" action="">
+                    <!-- ใช้ Method Override (DELETE) -->
+                    <button type="submit" class="btn btn-danger">ยืนยันการลบ</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script Modal Handler -->
+<script>
+    function confirmDelete(userId, userName) {
+        document.getElementById('userNameToDelete').textContent = userName;
+        const deleteForm = document.getElementById('deleteUserForm');
+        deleteForm.action = `/admin/users/delete/${userId}?_method=DELETE`;
+
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+        deleteModal.show();
+    }
+</script>
