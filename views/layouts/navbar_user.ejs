@@ -5,23 +5,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Title จะถูกส่งมาจาก res.render -->
-    <title><%= typeof title !== 'undefined' ? title : 'ระบบการยืมอุปกรณ์ภายในคณะต่างๆ' %></title>
-    
+    <title>
+        <%= typeof title !=='undefined' ? title : 'ระบบการยืมอุปกรณ์ภายในคณะต่างๆ' %>
+    </title>
+
     <!-- Bootstrap CSS CDN (แก้ไข xintegrity เป็น integrity) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <!-- Font Awesome CDN สำหรับไอคอน (แก้ไข xintegrity เป็น integrity) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-        xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLMDJc55WkYwY9yVvX6K/S7N0LdG8Z+uY5hFv5W5I5eQzQ5Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    
+        xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLMDJc55WkYwY9yVvX6K/S7N0LdG8Z+uY5hFv5W5I5eQzQ5Q=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
     <style>
         :root {
             /* User Theme: สีน้ำเงินเข้ม (Primary Blue) */
-            --primary-color: #007bff; 
-            --dark-bg: #f4f6f9; /* พื้นหลังสว่าง (Light Background) */
-            --card-bg: #ffffff; /* พื้นหลัง Card สว่าง */
-            --text-color: #343a40; /* สีข้อความหลักเข้ม */
-            --secondary-color: #17a2b8; /* สีรองสำหรับปุ่ม */
+            --primary-color: #007bff;
+            --dark-bg: #f4f6f9;
+            /* พื้นหลังสว่าง (Light Background) */
+            --card-bg: #ffffff;
+            /* พื้นหลัง Card สว่าง */
+            --text-color: #343a40;
+            /* สีข้อความหลักเข้ม */
+            --secondary-color: #17a2b8;
+            /* สีรองสำหรับปุ่ม */
         }
 
         body {
@@ -38,22 +45,26 @@
             border-bottom: 3px solid var(--primary-color);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        
-        .navbar-brand, .nav-link {
+
+        .navbar-brand,
+        .nav-link {
             color: var(--text-color) !important;
         }
 
-        .navbar-brand:hover, .nav-link:hover {
+        .navbar-brand:hover,
+        .nav-link:hover {
             color: var(--primary-color) !important;
         }
-        
+
         /* >>> แก้ไข: เพิ่ม CSS สำหรับสถานะ Active ให้เด่นชัดในธีมสว่าง <<< */
         .nav-link.active {
             font-weight: 700;
-            color: var(--primary-color) !important; /* ใช้สีหลักให้โดดเด่น */
+            color: var(--primary-color) !important;
+            /* ใช้สีหลักให้โดดเด่น */
             border-bottom: 3px solid var(--primary-color);
-            padding-bottom: 5px; 
+            padding-bottom: 5px;
         }
+
         /* >>> จบการแก้ไข CSS <<< */
 
         .logout-btn {
@@ -74,7 +85,7 @@
             padding-top: 20px;
             padding-bottom: 20px;
         }
-        
+
         .footer {
             background-color: var(--card-bg);
             color: #6c757d;
@@ -83,17 +94,29 @@
             margin-top: auto;
             text-align: center;
         }
+
+        .logout-btn {
+            background-color: #dc3545;
+            /* สีแดงแบบ Bootstrap danger */
+            border-color: #dc3545;
+            color: #fff !important;
+        }
+
+        .logout-btn:hover {
+            background-color: #bb2d3b;
+            border-color: #bb2d3b;
+        }
     </style>
 </head>
 
 <body>
-    
+
     <nav class="navbar navbar-expand-lg navbar-light sticky-top">
         <div class="container-fluid container">
             <a class="navbar-brand fw-bold text-uppercase" style="color: var(--primary-color);" href="/">
                 <i class="fas fa-tools me-2"></i> ระบบยืมอุปกรณ์
             </a>
-            
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#userMenu"
                 aria-controls="userMenu" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -104,26 +127,21 @@
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
                         <!-- แก้ไข: ลบ ' active' ที่ซ้ำซ้อนออก และใช้ logic activePage เต็มรูปแบบ -->
-                        <a class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>" aria-current="page" href="/users/dashboard">
+                        <a class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>"
+                            aria-current="page" href="/users/dashboard">
                             <i class="fas fa-home me-1"></i>หน้าหลัก
                         </a>
                     </li>
                     <li class="nav-item">
-                        <!-- แก้ไข: ใช้ logic activePage -->
-                        <a class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'items' ? 'active' : '' %>" href="/users/items">
-                            <i class="fas fa-list-ul me-1"></i>รายการของฉัน
+                        <a class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'equipment' ? 'active' : '' %>"
+                            href="/users/equipment">
+                            <i class="fas fa-boxes me-1"></i> รายการอุปกรณ์
                         </a>
                     </li>
                     <li class="nav-item">
-                        <!-- แก้ไข: ใช้ logic activePage -->
-                        <a class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'requests' ? 'active' : '' %>" href="/users/requests">
-                            <i class="fas fa-file-export me-1"></i>คำขอยืม
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <!-- แก้ไข: ใช้ logic activePage (สมมติว่าเป็น 'profile') -->
-                        <a class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'profile' ? 'active' : '' %>" href="/users/profile">
-                            <i class="fas fa-user-circle me-1"></i>โปรไฟล์
+                        <a class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'requests' ? 'active' : '' %>"
+                            href="/users/requests">
+                            <i class="fas fa-file-export me-1"></i> รายการคำขอ
                         </a>
                     </li>
                 </ul>
@@ -131,7 +149,8 @@
                 <!-- User Info and Logout -->
                 <!-- แก้ไข: ลบ inline style 'color: var(--text-white);' ที่ไม่ได้ใช้งานออก -->
                 <span class="navbar-text me-3 d-none d-lg-block " style="color: white;">
-                    <i class="fas fa-user me-1 "></i> ผู้ใช้: <%= typeof user !== 'undefined' ? user.username : 'Guest' %>
+                    <i class="fas fa-user me-1 "></i> ผู้ใช้: <%= typeof user !=='undefined' ? user.username : 'Guest'
+                        %>
                 </span>
                 <a href="/logout" class="btn btn-sm logout-btn">
                     <i class="fas fa-sign-out-alt me-1"></i> ออกจากระบบ
@@ -139,12 +158,12 @@
             </div>
         </div>
     </nav>
-    
+
     <main class="container">
         <!-- เนื้อหาหลักของเพจจะถูกแทรกที่นี่ -->
         <%- body %>
     </main>
-    
+
     <footer class="footer">
         © 2025 ระบบการยืมอุปกรณ์ภายในคณะ | Borrowing Management
     </footer>

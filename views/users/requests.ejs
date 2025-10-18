@@ -1,0 +1,188 @@
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold" style="color: var(--primary-color);"><i class="fas fa-list me-2"></i> ประวัติการยืมอุปกรณ์ของฉัน</h2>
+    </div>
+
+    <div class="mb-3 d-flex" style="gap: 10px;">
+        <input type="text" id="searchInput" class="form-control bg-dark text-light border-secondary"
+            placeholder="🔍 ค้นหาชื่ออุปกรณ์ในตาราง...">
+        <button type="button" class="btn btn-secondary" id="clearSearch">รีเซ็ต</button>
+    </div>
+
+    <div class="card shadow-sm p-4" style="background-color: #27293d; border: 1px solid rgba(0,188,212,0.2);">
+        <% if (borrows && borrows.length> 0) { %>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle text-light mb-0">
+                    <thead>
+                        <tr class="text-primary">
+                            <th scope="col">ลำดับ</th>
+                            <th scope="col">อุปกรณ์</th>
+                            <th scope="col">วันที่กำหนดคืน</th>
+                            <th scope="col">สถานะ</th>
+                            <th scope="col">หมายเหตุ</th>
+                            <th scope="col">การจัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% borrows.forEach((borrow, index)=> { %>
+                            <tr>
+                                <td>
+                                    <%= index + 1 %>
+                                </td>
+                                <td><strong>
+                                        <%= borrow.equipment_id ? borrow.equipment_id.name : 'ไม่พบอุปกรณ์' %>
+                                    </strong></td>
+                                <td>
+                                    <%= new Date(borrow.return_date).toLocaleDateString('th-TH') %>
+                                </td>
+                                <td><%- getStatusBadge(borrow.status) %></td>
+                                <td>
+                                    <%= borrow.note || '-' %>
+                                </td>
+                                <td>
+                                    <% if (borrow.status==='borrowed' ) { %>
+                                        <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal"
+                                            data-bs-target="#confirmReturnModal" data-bs-id="<%= borrow._id %>">
+                                            คืนอุปกรณ์
+                                        </button>
+                                        <% } else if (['pending','waitingForApproval','waitingForReturn'].includes(borrow.status))
+                                            { %>
+                                            <button class="btn btn-sm btn-info disabled">รออนุมัติ</button>
+                                            <% } else { %>
+                                                <button>
+                                                    คืนเรียบร้อยแล้ว
+                                                </button>
+                                                <% } %>
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
+            </div>
+            <% } else { %>
+                <div class="alert alert-info mb-0" role="alert">
+                    คุณยังไม่มีประวัติการยืมอุปกรณ์
+                </div>
+                <% } %>
+    </div>
+</div>
+
+<!-- Modals -->
+
+<!-- Confirm Return Modal -->
+<div class="modal fade" id="confirmReturnModal" tabindex="-1" aria-labelledby="confirmReturnModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background-color: #27293d; color: #f8f9fa;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmReturnModalLabel">ยืนยันการคืนอุปกรณ์</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <form id="returnForm" method="POST">
+                <div class="modal-body">
+                    <p>คุณต้องการยืนยันการคืนอุปกรณ์ชิ้นนี้ใช่หรือไม่?</p>
+                    <p class="text-danger">การดำเนินการนี้จะเปลี่ยนสถานะเป็น <strong>"รอยืนยัน"</strong> จากผู้ดูแลระบบ
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-success">ยืนยันการคืน</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- CSS เพิ่มเติม -->
+<style>
+    :root {
+            --primary-color: #00bcd4;
+            /* สีหลัก: Cyan/Teal */
+            --dark-bg: #1e1e2f;
+            /* พื้นหลังเข้ม */
+            --card-bg: #27293d;
+            /* พื้นหลัง Card */
+            --text-color: #f8f9fa;
+            /* สีข้อความหลัก */
+        }
+    .table {
+        background-color: transparent !important;
+        /* ให้ table เป็น transparent */
+    }
+
+    .table thead th {
+        background-color: #27293d !important;
+        /* สีหัวตารางเข้ากับ card */
+        color: #00bcd4 !important;
+        /* สีตัวอักษรหัวตาราง */
+        border-color: rgba(0, 188, 212, 0.2) !important;
+    }
+
+    .table tbody td {
+        background-color: #27293d !important;
+        /* สีพื้น cell */
+        color: #f8f9fa !important;
+        /* สีตัวอักษร cell */
+        border-color: rgba(0, 188, 212, 0.2) !important;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 188, 212, 0.1) !important;
+    }
+
+    .badge {
+        font-size: 0.85rem;
+        padding: 0.35em 0.6em;
+        border-radius: 0.35rem;
+    }
+
+    .badge-primary {
+        background-color: #00bcd4;
+        color: #fff;
+    }
+
+    .badge-success {
+        background-color: #4caf50;
+        color: #fff;
+    }
+
+    .badge-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+
+    .badge-danger {
+        background-color: #f44336;
+        color: #fff;
+    }
+
+    .badge-secondary {
+        background-color: #6c757d;
+        color: #fff;
+    }
+
+    input.form-control:focus {
+        box-shadow: 0 0 0 0.2rem rgba(0, 188, 212, .25);
+        border-color: #00bcd4;
+    }
+
+    .btn-success {
+        background-color: #4caf50;
+        border-color: #4caf50;
+    }
+
+    .btn-success:hover {
+        background-color: #45a049;
+    }
+
+    .btn-info {
+        background-color: #00bcd4;
+        border-color: #00bcd4;
+    }
+
+    .btn-info.disabled,
+    .btn-info:disabled {
+        opacity: 0.6;
+    }
+</style>

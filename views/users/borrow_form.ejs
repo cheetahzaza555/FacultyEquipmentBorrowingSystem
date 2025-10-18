@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ยืมอุปกรณ์ | ระบบยืมคืน</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-color: #00bcd4;
+            --dark-bg: #1e1e2f;
+            --card-bg: #27293d;
+            --text-color: #f8f9fa;
+            --text-muted-dark: #bdbdbd;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-card {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+            padding: 30px;
+            margin-top: 60px;
+            transition: 0.3s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0097a7;
+        }
+
+        .form-control,
+        .form-select {
+            background-color: #3b3e55;
+            color: var(--text-color);
+            border: 1px solid #4c4f69;
+        }
+
+        .form-control::placeholder {
+            color: #bdbdbd;
+        }
+
+        .text-muted {
+            color: var(--text-muted-dark) !important;
+        }
+
+        .back-link {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .logout-btn {
+            background-color: #dc3545;
+            /* สีแดงแบบ Bootstrap danger */
+            border-color: #dc3545;
+            color: #fff !important;
+        }
+
+        .logout-btn:hover {
+            background-color: #bb2d3b;
+            border-color: #bb2d3b;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="form-card">
+        <h2 class="fw-bold text-center text-primary mb-4">
+            <i class="fas fa-hand-holding me-2"></i> ยืมอุปกรณ์
+        </h2>
+
+        <div class="mb-4 text-center">
+            <img src="<%= equipment.image %>" alt="<%= equipment.name %>" class="rounded mb-3"
+                style="width: 200px; height: 150px; object-fit: cover;">
+            <h4 class="fw-bold text-primary">
+                <%= equipment.name %>
+            </h4>
+            <p class="text-muted">หมวดหมู่ :
+                <%= equipment.category_id ? equipment.category_id.name : 'ไม่ระบุประเภท' %>
+            </p>
+            <p class="text-start fw-bold mb-1">รายละเอียดอุปกรณ์</p>
+            <div class="text-start p-3 mb-3"
+                style="background-color: #3b3e55; border-radius: 10px; color: var(--text-color);">
+                <%= equipment.description || 'ไม่มีคำอธิบาย' %>
+            </div>
+        </div>
+
+        <form action="/users/borrow/<%= equipment._id %>" method="POST">
+            <div class="mb-3">
+                <label for="return_date" class="form-label">วันที่คืน</label>
+                <input type="date" id="return_date" name="return_date" class="form-control" required
+                    min="<%= new Date().toISOString().split('T')[0] %>">
+            </div>
+
+            <div class="mb-3">
+                <label for="note" class="form-label">หมายเหตุเพิ่มเติม</label>
+                <textarea id="note" name="note" class="form-control" rows="3" maxlength="100"
+                    placeholder="ระบุรายละเอียดเพิ่มเติม (ถ้ามี)..."></textarea>
+                <div class="form-text text-muted">จำกัดไม่เกิน 100 ตัวอักษร</div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <a href="/users/equipment" class="back-link">
+                    <i class="fas fa-arrow-left me-1"></i> กลับไปหน้าอุปกรณ์
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane me-1"></i> ส่งคำขอยืม
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

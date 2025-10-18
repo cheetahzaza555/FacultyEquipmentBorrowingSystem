@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-// 💡 เพิ่มการเรียกใช้ path และ fs สำหรับจัดการไฟล์และลบไฟล์หากมีข้อผิดพลาด
 const path = require('path');
 const fs = require('fs');
 
