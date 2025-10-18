@@ -200,18 +200,20 @@
     <script>
         function confirmAction(id, action) {
             const actionText = action === 'approve' ? 'อนุมัติ' : 'ปฏิเสธ';
-            const icon = action === 'approve' ? 'success' : 'error';
+            const icon = action === 'approve' ? 'info' : 'warning'; // ปรับ icon ให้สอดคล้องธีม
             const formAction = `/admin/reports/update/${id}`;
 
             Swal.fire({
                 title: `ยืนยันการ${actionText}?`,
                 text: "การดำเนินการนี้ไม่สามารถย้อนกลับได้",
-                icon: 'warning',
+                icon: icon,
                 showCancelButton: true,
-                confirmButtonColor: '#f7a329',
-                cancelButtonColor: '#6c757d',
+                confirmButtonColor: '#f7a329', // ใช้สีหลักธีมส้มทอง
+                cancelButtonColor: '#6c757d',  // สีเทาแบบ neutral
                 confirmButtonText: `ยืนยันการ${actionText}`,
-                cancelButtonText: 'ยกเลิก'
+                cancelButtonText: 'ยกเลิก',
+                background: '#27293d', // ให้ popup เข้ากับธีมเข้มของหน้า
+                color: '#f8f9fa'       // สีข้อความเป็นสีอ่อน
             }).then((result) => {
                 if (result.isConfirmed) {
                     // ส่งข้อมูลไปยัง backend
@@ -221,10 +223,12 @@
                         body: `action=${action}`
                     }).then(() => {
                         Swal.fire({
-                            icon: icon,
+                            icon: 'success',
                             title: `${actionText}สำเร็จ!`,
                             showConfirmButton: false,
-                            timer: 1200
+                            timer: 1200,
+                            background: '#27293d',
+                            color: '#f8f9fa'
                         });
                         setTimeout(() => location.reload(), 1300);
                     });

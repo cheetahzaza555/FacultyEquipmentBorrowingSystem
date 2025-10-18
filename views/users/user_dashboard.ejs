@@ -83,18 +83,8 @@
                 คุณได้เข้าสู่ระบบในฐานะ **<%= user.role === 'admin' ? 'ผู้ดูแลระบบ' : 'ผู้ใช้งานทั่วไป' %>**
             </p>
 
-            <div class="d-grid gap-3">
-                <!-- ตัวอย่างปุ่ม/ลิงก์หลักสำหรับการใช้งาน -->
-                <a href="/users/profile" class="btn btn-outline-info p-3">จัดการข้อมูลส่วนตัว</a>
-                <a href="/users/services" class="btn btn-outline-light p-3">ดูรายการบริการที่ขอไป</a>
-            </div>
 
             <hr class="my-5" style="border-top: 1px solid rgba(255, 255, 255, 0.1);">
-
-            <!-- ปุ่มออกจากระบบใน Card (เป็นทางเลือก) -->
-            <a href="/logout" class="btn logout-btn btn-lg w-100">
-                <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
-            </a>
         </div>
     </div>
 
