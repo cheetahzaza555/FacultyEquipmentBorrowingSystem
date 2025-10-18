@@ -88,7 +88,7 @@ router.post('/borrow/:id', ensureAuthenticated, async (req, res) => {
             return_date: req.body.return_date,
             note: req.body.note
         });
-        
+
         const { id } = req.params;
         const equipment = await Equipment.findById(id);
         if (!equipment) return res.status(404).send('ไม่พบอุปกรณ์');
@@ -126,9 +126,29 @@ router.get('/requests', ensureAuthenticated, async (req, res) => {
     }
 });
 
+router.post('/return/:id', ensureAuthenticated, async (req, res) => {
+    try {
+        const borrowId = req.params.id;
+        const borrow = await Borrows.findById(borrowId);
+        if (!borrow) return res.status(404).send('ไม่พบรายการยืม');
 
+        // อัพเดตสถานะการยืมเป็น 'returned'
+        borrow.status = 'returned';
+        await borrow.save();
 
+        // อัพเดตสถานะอุปกรณ์เป็น 'available'
+        const equipment = await Equipment.findById(borrow.equipment_id);
+        if (equipment) {
+            equipment.status = 'available';
+            await equipment.save();
+        }
 
+        res.redirect('/users/requests');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('เกิดข้อผิดพลาด');
+    }
+});
 
 
 module.exports = router;

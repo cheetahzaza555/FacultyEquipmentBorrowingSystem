@@ -1,6 +1,7 @@
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0 fw-bold" style="color: var(--primary-color);"><i class="fas fa-list me-2"></i> ประวัติการยืมอุปกรณ์ของฉัน</h2>
+        <h2 class="mb-0 fw-bold" style="color: var(--primary-color);"><i class="fas fa-list me-2"></i>
+            ประวัติการยืมอุปกรณ์ของฉัน</h2>
     </div>
 
     <div class="mb-3 d-flex" style="gap: 10px;">
@@ -42,16 +43,15 @@
                                 <td>
                                     <% if (borrow.status==='borrowed' ) { %>
                                         <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal"
-                                            data-bs-target="#confirmReturnModal" data-bs-id="<%= borrow._id %>">
+                                            data-bs-target="#confirmReturnModal" data-bs-id="<%= borrow._id %>"
+                                            data-bs-name="<%= borrow.equipment_id ? borrow.equipment_id.name : 'ไม่พบอุปกรณ์' %>"
+                                            data-bs-image-url="<%= borrow.equipment_id ? borrow.equipment_id.image : '/images/default.jpg' %>">
                                             คืนอุปกรณ์
                                         </button>
-                                        <% } else if (['pending','waitingForApproval','waitingForReturn'].includes(borrow.status))
+                                        <% } else if
+                                            (['pending','waitingForApproval','waitingForReturn'].includes(borrow.status))
                                             { %>
-                                            <button class="btn btn-sm btn-info disabled">รออนุมัติ</button>
                                             <% } else { %>
-                                                <button>
-                                                    คืนเรียบร้อยแล้ว
-                                                </button>
                                                 <% } %>
                                 </td>
                             </tr>
@@ -67,9 +67,6 @@
     </div>
 </div>
 
-<!-- Modals -->
-
-<!-- Confirm Return Modal -->
 <div class="modal fade" id="confirmReturnModal" tabindex="-1" aria-labelledby="confirmReturnModalLabel"
     aria-hidden="true">
     <div class="modal-dialog">
@@ -79,11 +76,15 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                     aria-label="Close"></button>
             </div>
-            <form id="returnForm" method="POST">
+            <form action="" id="returnForm" method="POST">
                 <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <img id="modalEquipmentImage" src="" alt="Equipment Image" class="img-fluid rounded"
+                            style="max-height: 150px; border: 1px solid #00bcd4;">
+                    </div>
+                    <p class="text-center fs-5 fw-bold text-warning" id="modalEquipmentName"></p>
+                    <hr style="border-color: rgba(0, 188, 212, 0.2);">
                     <p>คุณต้องการยืนยันการคืนอุปกรณ์ชิ้นนี้ใช่หรือไม่?</p>
-                    <p class="text-danger">การดำเนินการนี้จะเปลี่ยนสถานะเป็น <strong>"รอยืนยัน"</strong> จากผู้ดูแลระบบ
-                    </p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
@@ -94,18 +95,44 @@
     </div>
 </div>
 
+<script>
+    // เมื่อ modal ถูกเรียกขึ้นมา
+    var confirmReturnModal = document.getElementById('confirmReturnModal');
+    confirmReturnModal.addEventListener('show.bs.modal', function (event) {
+        // ปุ่มที่เรียก modal
+        var button = event.relatedTarget;
+        // ดึงข้อมูลจาก data-bs-attributes
+        var equipmentName = button.getAttribute('data-bs-name');
+        var equipmentImage = button.getAttribute('data-bs-image-url');
+        var borrowId = button.getAttribute('data-bs-id');
+
+        // อัปเดตรูปและชื่อใน modal
+        var modalImage = confirmReturnModal.querySelector('#modalEquipmentImage');
+        var modalName = confirmReturnModal.querySelector('#modalEquipmentName');
+        var returnForm = confirmReturnModal.querySelector('#returnForm');
+
+        modalImage.src = equipmentImage || '/images/default.jpg';
+        modalName.textContent = equipmentName || 'ไม่พบอุปกรณ์';
+
+        // อัปเดต action ของฟอร์มให้ส่งไปยัง URL คืนอุปกรณ์
+        returnForm.action = '/users/return/' + borrowId;
+    });
+</script>
+
+
 <!-- CSS เพิ่มเติม -->
 <style>
     :root {
-            --primary-color: #00bcd4;
-            /* สีหลัก: Cyan/Teal */
-            --dark-bg: #1e1e2f;
-            /* พื้นหลังเข้ม */
-            --card-bg: #27293d;
-            /* พื้นหลัง Card */
-            --text-color: #f8f9fa;
-            /* สีข้อความหลัก */
-        }
+        --primary-color: #00bcd4;
+        /* สีหลัก: Cyan/Teal */
+        --dark-bg: #1e1e2f;
+        /* พื้นหลังเข้ม */
+        --card-bg: #27293d;
+        /* พื้นหลัง Card */
+        --text-color: #f8f9fa;
+        /* สีข้อความหลัก */
+    }
+
     .table {
         background-color: transparent !important;
         /* ให้ table เป็น transparent */

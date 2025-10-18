@@ -6,6 +6,7 @@ const fs = require('fs');
 const { ensureAdmin } = require('../middleware/auth'); // ใช้ Middleware ป้องกัน
 // 💡 นำเข้า Multer Middleware ที่เราสร้างไว้
 const upload = require('../middleware/upload');
+const Borrows = require('../model/borrow');
 const Equipment = require('../model/equipment');
 const Category = require('../model/category');
 const User = require('../model/users');
@@ -355,6 +356,49 @@ router.post('/edit/:id', upload.single('image'), async (req, res) => {
         res.redirect('/admin/equipment');
     } catch (err) {
         res.status(500).send('เกิดข้อผิดพลาดในการอัปเดตข้อมูล');
+    }
+});
+
+// แสดงหน้ารายงานทั้งหมด
+router.get("/reports", async (req, res) => {
+    try {
+        const borrows = await Borrows.find()
+            .populate("user_id", "firstName lastName userId")
+            .populate("equipment_id", "name category_id")
+            .sort({ created_at: -1 });
+
+        res.render("admin/reports", {
+            borrows,
+            activePage: "reports",
+            user: req.session.user,
+            layout: "layouts/navbar_admin",
+            title: "รายงานการยืมอุปกรณ์"
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Server Error");
+    }
+});
+
+// อนุมัติหรือปฏิเสธการยืม
+router.post("/reports/update/:id", async (req, res) => {
+    try {
+        const { action } = req.body; // approve หรือ reject
+        const borrow = await Borrows.findById(req.params.id);
+
+        if (!borrow) return res.status(404).send("ไม่พบข้อมูล");
+
+        if (action === "approve") {
+            borrow.status = "borrowed";
+        } else if (action === "reject") {
+            borrow.status = "rejected";
+        }
+
+        await borrow.save();
+        res.redirect("/admin/reports");
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Server Error");
     }
 });
 
