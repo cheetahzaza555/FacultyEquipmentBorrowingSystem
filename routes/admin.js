@@ -327,4 +327,37 @@ router.post('/users/edit/:id', ensureAdmin, async (req, res) => {
     }
 });
 
+// GET: หน้าแก้ไขอุปกรณ์
+router.get('/edit/:id', async (req, res) => {
+    try {
+        const equipment = await Equipment.findById(req.params.id).populate('category_id');
+        const categories = await Category.find().sort({ name: 1 });
+        res.render('admin/edit_equipment', { equipment, categories, user: req.session.user, layout: 'layouts/navbar_admin',  activePage: 'equipment_list' });
+    } catch (err) {
+        res.status(500).send('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+    }
+});
+
+// POST: บันทึกการแก้ไข
+router.post('/edit/:id', upload.single('image'), async (req, res) => {
+    try {
+        const updateData = {
+            name: req.body.name,
+            category_id: req.body.category_id,
+            description: req.body.description,
+            status: req.body.status,
+        };
+
+        if (req.file) {
+            updateData.image = '/uploads/' + req.file.filename;
+        }
+
+        await Equipment.findByIdAndUpdate(req.params.id, updateData);
+        res.redirect('/admin/equipment');
+    } catch (err) {
+        res.status(500).send('เกิดข้อผิดพลาดในการอัปเดตข้อมูล');
+    }
+});
+
+
 module.exports = router;
