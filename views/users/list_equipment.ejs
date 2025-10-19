@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>รายการอุปกรณ์ | ระบบยืมคืน</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <style>
         :root {
             --primary-color: #00bcd4;
-            /* สีหลัก cyan/teal */
             --dark-bg: #1e1e2f;
             --card-bg: #27293d;
             --text-color: #f8f9fa;
@@ -79,11 +79,6 @@
             color: #bdbdbd;
         }
 
-        .form-select option {
-            background-color: #3b3e55;
-            color: var(--text-color);
-        }
-
         .btn-outline-primary {
             color: var(--primary-color);
             border-color: var(--primary-color);
@@ -118,17 +113,21 @@
                 <p class="text-muted">เลือกอุปกรณ์ที่ต้องการยืมหรือดูรายละเอียดเพิ่มเติม</p>
             </div>
         </div>
-        <!-- แถบค้นหาและกรอง -->
+
+        <!-- 🔍 แถบค้นหาและกรอง -->
         <div class="row mb-4 g-2">
             <div class="col-md-5">
                 <div class="input-group">
-                    <input type="text" class="form-control" placeholder="ค้นหาอุปกรณ์..." aria-label="ค้นหา">
-                    <button class="btn btn-outline-primary" type="button"><i class="fas fa-search"></i></button>
+                    <input type="text" id="searchInput" class="form-control" placeholder="ค้นหาอุปกรณ์..."
+                        aria-label="ค้นหา">
+                    <button class="btn btn-outline-primary" id="clearSearch" type="button">
+                        <i class="fas fa-rotate"></i>
+                    </button>
                 </div>
             </div>
             <div class="col-md-3">
-                <select class="form-select" aria-label="ประเภทอุปกรณ์">
-                    <option selected>ประเภทอุปกรณ์</option>
+                <select id="categoryFilter" class="form-select" aria-label="ประเภทอุปกรณ์">
+                    <option value="">ประเภทอุปกรณ์ทั้งหมด</option>
                     <% if (typeof categories !=='undefined' ) { %>
                         <% categories.forEach(category=> { %>
                             <option value="<%= category._id %>">
@@ -139,8 +138,8 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <select class="form-select" aria-label="สถานะ">
-                    <option selected>เลือกสถานะ</option>
+                <select id="statusFilter" class="form-select" aria-label="สถานะ">
+                    <option value="">สถานะทั้งหมด</option>
                     <option value="available">พร้อมใช้งาน</option>
                     <option value="unavailable">ไม่พร้อมใช้งาน</option>
                     <option value="broken">ชำรุด</option>
@@ -148,11 +147,13 @@
             </div>
         </div>
 
-        <!-- รายการอุปกรณ์ -->
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+        <!-- 🧰 รายการอุปกรณ์ -->
+        <div id="equipmentContainer" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
             <% if (typeof equipments !=='undefined' && equipments.length> 0) { %>
                 <% equipments.forEach(equipment=> { %>
-                    <div class="col">
+                    <div class="col equipment-item" data-name="<%= equipment.name.toLowerCase() %>"
+                        data-status="<%= equipment.status %>"
+                        data-category="<%= equipment.category_id ? equipment.category_id._id : '' %>">
                         <div class="card equipment-card h-100">
                             <img src="<%= equipment.image %>" class="card-img-top" alt="<%= equipment.name %>"
                                 onerror="this.onerror=null; this.src='https://placehold.co/600x400/27293d/00bcd4?text=No+Image';">
@@ -161,9 +162,10 @@
                                     <h5 class="card-title fw-bold text-truncate me-2 text-primary">
                                         <%= equipment.name %>
                                     </h5>
-                                    <span
-                                        class="badge rounded-pill status-badge 
-                <%= equipment.status === 'available' ? 'status-available' : equipment.status === 'unavailable' ? 'status-unavailable' : 'status-broken' %>">
+                                    <span class="badge rounded-pill status-badge 
+                                        <%= equipment.status === 'available' ? 'status-available' : 
+                                            equipment.status === 'unavailable' ? 'status-unavailable' : 
+                                            'status-broken' %>">
                                         <%= equipment.status %>
                                     </span>
                                 </div>
@@ -171,7 +173,7 @@
                                     <i class="fas fa-tag me-1"></i>
                                     <%= equipment.category_id ? equipment.category_id.name : 'ไม่ระบุประเภท' %>
                                 </p>
-                                <p class="card-text small text-muted-dark text-truncate-3">
+                                <p class="card-text small  text-truncate-3 text-primary">
                                     <%= equipment.description || 'ไม่มีคำอธิบาย' %>
                                 </p>
                                 <div class="mt-auto">
@@ -194,8 +196,48 @@
                             </div>
                             <% } %>
         </div>
-
     </div>
+
+    <script>
+        const searchInput = document.getElementById("searchInput");
+        const categoryFilter = document.getElementById("categoryFilter");
+        const statusFilter = document.getElementById("statusFilter");
+        const clearSearch = document.getElementById("clearSearch");
+        const equipments = document.querySelectorAll(".equipment-item");
+
+        function filterEquipments() {
+            const searchText = searchInput.value.toLowerCase();
+            const category = categoryFilter.value;
+            const status = statusFilter.value;
+
+            equipments.forEach(item => {
+                const name = item.dataset.name;
+                const itemCategory = item.dataset.category;
+                const itemStatus = item.dataset.status;
+
+                const matchesSearch = name.includes(searchText);
+                const matchesCategory = !category || itemCategory === category;
+                const matchesStatus = !status || itemStatus === status;
+
+                if (matchesSearch && matchesCategory && matchesStatus) {
+                    item.style.display = "block";
+                } else {
+                    item.style.display = "none";
+                }
+            });
+        }
+
+        searchInput.addEventListener("input", filterEquipments);
+        categoryFilter.addEventListener("change", filterEquipments);
+        statusFilter.addEventListener("change", filterEquipments);
+        clearSearch.addEventListener("click", () => {
+            searchInput.value = "";
+            categoryFilter.value = "";
+            statusFilter.value = "";
+            filterEquipments();
+        });
+    </script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

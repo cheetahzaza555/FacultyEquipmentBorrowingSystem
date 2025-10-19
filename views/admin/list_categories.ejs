@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการหมวดหมู่อุปกรณ์</title>
+
+    <!-- Bootstrap + FontAwesome -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet"
+        crossorigin="anonymous">
+
+    <style>
+        :root {
+            --primary-color: #f7a329;
+            --dark-bg: #1e1e2f;
+            --card-bg: #27293d;
+            --text-color: #f8f9fa;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-color);
+            min-height: 100vh;
+        }
+
+        .card-category {
+            background-color: var(--card-bg);
+            border: 1px solid var(--primary-color);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+        }
+
+        .btn-primary,
+        .btn-warning,
+        .btn-info,
+        .btn-danger {
+            font-weight: 600;
+        }
+
+        .btn-warning {
+            background-color: var(--primary-color);
+            border: none;
+        }
+
+        .btn-warning:hover {
+            background-color: #e09322;
+        }
+
+        .table-dark {
+            --bs-table-bg: #3b3e55;
+            --bs-table-striped-bg: #4c4f69;
+            --bs-table-hover-bg: #5d6185;
+            --bs-table-border-color: #5d6185;
+            color: var(--text-color);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container py-5">
+
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-tags me-2"></i> จัดการหมวดหมู่อุปกรณ์</h1>
+            <a href="/admin/categories/add" class="btn btn-warning">
+                <i class="fas fa-plus me-1"></i> เพิ่มหมวดหมู่ใหม่
+            </a>
+        </div>
+
+        <!-- Table Card -->
+        <div class="card shadow-lg card-category p-4">
+            <% if (categories && categories.length>0) { %>
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped table-hover rounded-3 overflow-hidden text-start">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>ชื่อหมวดหมู่</th>
+                                <th>วันที่สร้าง</th>
+                                <th>ดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% categories.forEach((cat, index)=> { %>
+                                <tr>
+                                    <td>
+                                        <%= index + 1 %>
+                                    </td>
+                                    <td>
+                                        <%= cat.name %>
+                                    </td>
+                                    <td>
+                                        <%= new Date(cat.created_at).toLocaleDateString('th-TH') %>
+                                    </td>
+                                    <td class="text-nowrap">
+                                        <a href="/admin/categories/edit/<%= cat._id %>"
+                                            class="btn btn-sm btn-info me-2">
+                                            <i class="fas fa-edit"></i> แก้ไข
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-danger"
+                                            onclick="confirmDelete('<%= cat._id %>', '<%= cat.name %>')">
+                                            <i class="fas fa-trash-alt"></i> ลบ
+                                        </button>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+                <% } else { %>
+                    <div class="alert alert-warning text-center">
+                        <i class="fas fa-info-circle me-1"></i> ยังไม่มีหมวดหมู่ในระบบ
+                    </div>
+                    <% } %>
+        </div>
+
+    </div>
+
+    <!-- Modal ยืนยันการลบ -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background-color: var(--card-bg); color: var(--text-color);">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title" id="deleteConfirmModalLabel" style="color: var(--primary-color);">
+                        ยืนยันการลบ</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    คุณแน่ใจหรือไม่ที่จะลบหมวดหมู่: <strong id="categoryNameToDelete"></strong>? <br>
+                    การดำเนินการนี้ไม่สามารถย้อนกลับได้
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <form id="deleteCategoryForm" method="POST" action="">
+                        <button type="submit" class="btn btn-danger">ยืนยันการลบ</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Modal -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
+    <script>
+        function confirmDelete(categoryId, categoryName) {
+            document.getElementById('categoryNameToDelete').textContent = categoryName;
+            const form = document.getElementById('deleteCategoryForm');
+            form.action = `/admin/categories/delete/${categoryId}?_method=DELETE`;
+
+            const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+            modal.show();
+        }
+    </script>
+</body>
+
+</html>

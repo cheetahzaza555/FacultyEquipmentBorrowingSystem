@@ -14,14 +14,30 @@ const Major = require('../model/major');
 
 
 // Route สำหรับหน้า Admin Dashboard
-router.get('/dashboard', ensureAdmin, (req, res) => {
-    // เรนเดอร์ไฟล์ admin_dashboard.ejs ในโฟลเดอร์ views/admin
-    res.render('admin/admin_dashboard', {
-        title: 'Admin Dashboard',
-        user: req.session.user,
-        layout: 'layouts/navbar_admin',
-        activePage: 'dashboard'
-    });
+router.get('/dashboard', async (req, res) => {
+    if (!req.session.user) return res.redirect('/login');
+
+    try {
+        const totalEquipments = await Equipment.countDocuments(); // นับอุปกรณ์ทั้งหมด
+        const pendingRequests = await Borrows.countDocuments({ status: 'waitingForApproval' }); // นับคำขอที่รออนุมัติ
+
+        res.render('admin/admin_dashboard', {
+            user: req.session.user,
+            totalEquipments,
+            pendingRequests,
+            layout: 'layouts/navbar_admin',
+            activePage: 'dashboard'
+        });
+    } catch (err) {
+        console.error(err);
+        res.render('admin/admin_dashboard', {
+            user: req.session.user,
+            totalEquipments: 0,
+            pendingRequests: 0,
+            layout: 'layouts/navbar_admin',
+            activePage: 'dashboard'
+        });
+    }
 });
 
 // Route แสดงรายการอุปกรณ์
@@ -98,7 +114,7 @@ router.post(
             // 2. ดึง Categories กลับมา
             const categories = await Category.find().sort({ name: 1 });
             // 3. Render หน้าฟอร์มพร้อม Error
-            res.render('admin/add_equipment', {
+            res.render('admin/list_equipment', {
                 title: 'เพิ่มอุปกรณ์ใหม่',
                 activePage: 'add_equipment',
                 categories: categories,
@@ -328,11 +344,11 @@ router.post('/users/edit/:id', ensureAdmin, async (req, res) => {
 });
 
 // GET: หน้าแก้ไขอุปกรณ์
-router.get('/edit/:id', async (req, res) => {
+router.get('/edit/:id', ensureAdmin, async (req, res) => {
     try {
         const equipment = await Equipment.findById(req.params.id).populate('category_id');
         const categories = await Category.find().sort({ name: 1 });
-        res.render('admin/edit_equipment', { equipment, categories, user: req.session.user, layout: 'layouts/navbar_admin',  activePage: 'equipment_list' });
+        res.render('admin/edit_equipment', { equipment, categories, user: req.session.user, layout: 'layouts/navbar_admin', activePage: 'equipment_list' });
     } catch (err) {
         res.status(500).send('เกิดข้อผิดพลาดในการโหลดข้อมูล');
     }
@@ -360,7 +376,7 @@ router.post('/edit/:id', upload.single('image'), async (req, res) => {
 });
 
 // แสดงหน้ารายงานทั้งหมด
-router.get("/reports", async (req, res) => {
+router.get("/reports", ensureAdmin, async (req, res) => {
     try {
         const borrows = await Borrows.find()
             .populate("user_id", "firstName lastName userId")
@@ -399,6 +415,112 @@ router.post("/reports/update/:id", async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).send("Server Error");
+    }
+});
+
+router.get('/categories', ensureAdmin, async (req, res) => {
+    try {
+        const categories = await Category.find().sort({ name: 1 });
+        res.render('admin/list_categories', {
+            title: 'จัดการหมวดหมู่อุปกรณ์',
+            categories,
+            user: req.session.user,
+            layout: 'layouts/navbar_admin',
+            activePage: 'categories',
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('เกิดข้อผิดพลาดในการโหลดข้อมูลหมวดหมู่');
+    }
+});
+
+router.get('/categories/add', ensureAdmin, (req, res) => {
+    res.render('admin/add_category', {
+        title: 'เพิ่มหมวดหมู่ใหม่',
+        user: req.session.user,
+        layout: 'layouts/navbar_admin',
+        activePage: 'categories',
+        error: null,
+        formData: {}
+    });
+});
+
+router.get('/categories/add', (req, res) => {
+    res.render('admin/add_category', { title: 'เพิ่มหมวดหมู่ใหม่', user: req.session.user, layout: 'layouts/navbar_admin', activePage: 'categories', error: null, formData: {} });
+});
+
+// ✅ เพิ่มหมวดหมู่ใหม่
+router.post('/categories/add', async (req, res) => {
+    try {
+        const { name } = req.body;
+        if (!name || !name.trim()) {
+            return res.redirect('/admin/categories/add?error=' + encodeURIComponent('กรุณากรอกชื่อหมวดหมู่'));
+        }
+
+        const existing = await Category.findOne({ name: name.trim() });
+        if (existing) {
+            return res.redirect('/admin/categories/add?error=' + encodeURIComponent('มีชื่อหมวดหมู่นี้อยู่แล้ว'));
+        }
+
+        await Category.create({ name: name.trim() });
+        return res.redirect('/admin/categories?success=' + encodeURIComponent('เพิ่มหมวดหมู่สำเร็จ'));
+    } catch (err) {
+        console.error(err);
+        return res.redirect('/admin/categories/add?error=' + encodeURIComponent('เกิดข้อผิดพลาดขณะเพิ่มหมวดหมู่'));
+    }
+});
+
+// หน้าแก้ไขหมวดหมู่
+router.get('/categories/edit/:id', ensureAdmin, async (req, res) => {
+    try {
+        const category = await Category.findById(req.params.id);
+        if (!category) {
+            return res.redirect('/admin/categories?error=' + encodeURIComponent('ไม่พบหมวดหมู่ที่ต้องการแก้ไข'));
+        }
+        res.render('admin/edit_category', {
+            title: 'แก้ไขหมวดหมู่',
+            category,
+            user: req.session.user,
+            layout: 'layouts/navbar_admin',
+            activePage: 'categories'
+        });
+    } catch (err) {
+        console.error(err);
+        return res.redirect('/admin/categories?error=' + encodeURIComponent('เกิดข้อผิดพลาดขณะโหลดข้อมูลหมวดหมู่'));
+    }
+});
+
+// ✅ แก้ไขหมวดหมู่
+router.post('/categories/edit/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name } = req.body;
+
+        if (!name || !name.trim()) {
+            return res.redirect(`/admin/categories/edit/${id}?error=` + encodeURIComponent('กรุณากรอกชื่อหมวดหมู่'));
+        }
+
+        const existing = await Category.findOne({ name: name.trim(), _id: { $ne: id } });
+        if (existing) {
+            return res.redirect(`/admin/categories/edit/${id}?error=` + encodeURIComponent('มีชื่อหมวดหมู่นี้อยู่แล้ว'));
+        }
+
+        await Category.findByIdAndUpdate(id, { name: name.trim() });
+        return res.redirect('/admin/categories?success=' + encodeURIComponent('แก้ไขหมวดหมู่สำเร็จ'));
+    } catch (err) {
+        console.error(err);
+        return res.redirect(`/admin/categories/edit/${req.params.id}?error=` + encodeURIComponent('เกิดข้อผิดพลาดขณะอัปเดตหมวดหมู่'));
+    }
+});
+
+// ✅ ลบหมวดหมู่
+router.post('/categories/delete/:id', async (req, res) => {
+    try {
+        await Category.findByIdAndDelete(req.params.id);
+        return res.redirect('/admin/categories?success=' + encodeURIComponent('ลบหมวดหมู่สำเร็จ'));
+    } catch (err) {
+        console.error(err);
+        return res.redirect('/admin/categories?error=' + encodeURIComponent('เกิดข้อผิดพลาดขณะลบหมวดหมู่'));
     }
 });
 

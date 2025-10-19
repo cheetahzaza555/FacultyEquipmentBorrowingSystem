@@ -146,8 +146,7 @@
                     </div>
                     <% } %>
 
-                        <form action="/admin/edit/<%= equipment._id %>" method="POST"
-                            enctype="multipart/form-data">
+                        <form action="/admin/edit/<%= equipment._id %>" method="POST" enctype="multipart/form-data">
                             <!-- ชื่ออุปกรณ์ -->
                             <div class="mb-3">
                                 <label for="name" class="form-label">ชื่ออุปกรณ์:</label>
@@ -160,8 +159,9 @@
                                 <label for="category_id" class="form-label">หมวดหมู่:</label>
                                 <select id="category_id" name="category_id" class="form-select" required>
                                     <% categories.forEach(cat=> { %>
-                                        <option value="<%= cat._id %>" <%=equipment.category_id &&
-                                            equipment.category_id.toString()===cat._id.toString() ? 'selected' : '' %>>
+                                        <option value="<%= cat._id %>" <%=(equipment.category_id &&
+                                            equipment.category_id._id.toString()===cat._id.toString()) ? 'selected' : ''
+                                            %>>
                                             <%= cat.name %>
                                         </option>
                                         <% }) %>

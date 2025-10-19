@@ -29,14 +29,27 @@ function getStatusBadge(status) {
 
 // Route สำหรับหน้า User Dashboard
 // ensureAuthenticated จะตรวจสอบว่าผู้ใช้ต้อง Login แล้วเท่านั้น
-router.get('/dashboard', ensureAuthenticated, (req, res) => {
-    // เรนเดอร์ไฟล์ user_dashboard.ejs ในโฟลเดอร์ views/user
-    res.render('users/user_dashboard', {
-        title: 'Users Dashboard',
-        user: req.session.user,
-        layout: 'layouts/navbar_user',
-        activePage: 'dashboard'
-    });
+router.get('/dashboard', ensureAuthenticated, async (req, res) => {
+    try {
+        const userId = req.session.user._id;
+
+        // นับจำนวนคำขอของ user
+        const totalPending = await Borrows.countDocuments({ user: userId, status: 'waitingForApproval' });
+        const totalApproved = await Borrows.countDocuments({ user: userId, status: 'borrowed' });
+        const totalRejected = await Borrows.countDocuments({ user: userId, status: 'rejected' });
+
+        res.render('users/user_dashboard', {
+            user: req.session.user,
+            pending: totalPending,
+            approved: totalApproved,
+            rejected: totalRejected,
+            layout: 'layouts/navbar_user',
+            activePage: 'dashboard'
+        });
+    } catch (err) {
+        console.error(err);
+        res.render('users/user_dashboard', { user: req.session.user, pending: 0, approved: 0, rejected: 0 , layout: 'layouts/navbar_user', activePage: 'dashboard'});
+    }
 });
 
 router.get('/equipment', ensureAuthenticated, async (req, res) => {

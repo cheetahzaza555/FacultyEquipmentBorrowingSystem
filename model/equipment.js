@@ -20,7 +20,7 @@ const equipmentSchema = new mongoose.Schema({
     
     description: { 
         type: String, 
-        maxlength: 100,
+        maxlength: 255,
         default: ''
     },
     
