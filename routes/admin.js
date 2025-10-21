@@ -445,10 +445,6 @@ router.get('/categories/add', ensureAdmin, (req, res) => {
     });
 });
 
-router.get('/categories/add', (req, res) => {
-    res.render('admin/add_category', { title: 'เพิ่มหมวดหมู่ใหม่', user: req.session.user, layout: 'layouts/navbar_admin', activePage: 'categories', error: null, formData: {} });
-});
-
 // ✅ เพิ่มหมวดหมู่ใหม่
 router.post('/categories/add', async (req, res) => {
     try {
