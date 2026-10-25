@@ -132,8 +132,8 @@
     <script>
         const returnDateInput = document.getElementById('return_date');
         const today = new Date();
-        today.setHours(0, 0, 0, 0); // ตัดเวลาออก เหลือแค่วัน
-        const localToday = today.toLocaleDateString('en-CA'); // ได้รูปแบบ YYYY-MM-DD
+        today.setHours(0, 0, 0, 0); 
+        const localToday = today.toLocaleDateString('en-CA'); 
         returnDateInput.setAttribute('min', localToday);
     </script>
 

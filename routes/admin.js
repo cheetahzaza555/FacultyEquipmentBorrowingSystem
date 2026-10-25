@@ -314,7 +314,6 @@ router.post('/users/edit/:id', ensureAdmin, async (req, res) => {
         // 2. เตรียมข้อมูลที่ต้องการอัพเดท
         const updateData = {
             role: role,
-            // 💡 เพิ่มฟิลด์อื่นๆ ที่ต้องการแก้ไข เช่น major, status หากมีในฟอร์ม
             major: major || null, // สมมติว่า major คือ ObjectId หรือ null
             status: status || 'active' // สมมติว่า status มีให้เลือกในฟอร์ม
         };
@@ -372,6 +371,25 @@ router.post('/edit/:id', upload.single('image'), async (req, res) => {
         res.redirect('/admin/equipment');
     } catch (err) {
         res.status(500).send('เกิดข้อผิดพลาดในการอัปเดตข้อมูล');
+    }
+});
+
+router.post('/equipment/delete/:id', ensureAdmin, async (req, res) => {
+    try {
+        const equipmentId = req.params.id;
+        const result = await Equipment.findByIdAndDelete(equipmentId);
+
+        if (!result) {
+            console.warn(`ไม่พบอุปกรณ์ ID: ${equipmentId}`);
+            return res.redirect('/admin/equipment');
+        }
+
+        console.log(`ลบอุปกรณ์ ${result.name} สำเร็จแล้ว`);
+        res.redirect('/admin/equipment');
+
+    } catch (error) {
+        console.error('Error deleting equipment:', error);
+        res.status(500).redirect('/admin/equipment');
     }
 });
 

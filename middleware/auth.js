@@ -1,8 +1,4 @@
-// D:\Project\presahakit\middleware\auth.js (โค้ดที่ถูกต้อง)
 
-/**
- * Middleware สำหรับตรวจสอบว่าผู้ใช้ได้เข้าสู่ระบบแล้วหรือไม่
- */
 const ensureAuthenticated = (req, res, next) => {
     // 1. ตรวจสอบว่ามีอ็อบเจกต์ 'user' ใน session หรือไม่
     if (req.session && req.session.user) { 
@@ -12,9 +8,6 @@ const ensureAuthenticated = (req, res, next) => {
     res.redirect('/login');
 };
 
-/**
- * Middleware สำหรับตรวจสอบว่าผู้ใช้มี Role เป็น 'admin' หรือไม่
- */
 const ensureAdmin = (req, res, next) => {
     // ดึงข้อมูล role จากอ็อบเจกต์ user
     const userRole = req.session && req.session.user ? req.session.user.role : null;
